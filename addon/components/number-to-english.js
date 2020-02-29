@@ -1,22 +1,22 @@
-import Component from '@ember/component';
-import { computed } from '@ember/object';
-import { htmlSafe } from '@ember/string'; 
+import Ember from 'ember';
 import layout from '../templates/components/number-to-english';
 
-export default Component.extend({
+export default Ember.Component.extend({
+  tagName: 'tspan',
   layout,
 
   number: 0,
 
+
   integerToWord: function(number) {
     let units, tens, scales, start, end, chunks,
-        chunksLen, chunk, ints, i, word, words, and = 'and';
+      chunksLen, chunk, ints, i, word, words, and = 'and';
 
     // Is number zero?
-    if(parseInt(number) === 0) {
+    if (parseInt(number) === 0) {
       return 'zero';
     }
-
+    
     // Array of units as words
     units = [
       '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
@@ -43,57 +43,57 @@ export default Component.extend({
     // Split user argument into 3 digit chunks from right to left
     start = number.length;
     chunks = [];
-    while(start > 0) {
+    while (start > 0) {
       end = start;
       chunks.push(number.slice((start = Math.max(0, start - 3)), end));
     }
 
     // Check if function has enough scale words to be able to stringify the user argument
     chunksLen = chunks.length;
-    if(chunksLen > scales.length) {
+    if (chunksLen > scales.length) {
       return '';
     }
 
     // Stringify each integer in each chunk
     words = [];
-    for(i = 0; i < chunksLen; i++) {
+    for (i = 0; i < chunksLen; i++) {
       chunk = parseInt(chunks[i]);
-      if(chunk) {
+      if (chunk) {
 
         // Split chunk into array of individual integers
-        ints = chunks[i].split( '' ).reverse().map(parseFloat);
+        ints = chunks[i].split('').reverse().map(parseFloat);
 
         // If tens integer is 1, i.e. 10, then add 10 to units integer
-        if(ints[1] === 1) {
+        if (ints[1] === 1) {
           ints[0] += 10;
         }
 
         // Add scale word if chunk is not zero and array item exists
-        if((word = scales[i])) {
+        if ((word = scales[i])) {
           words.push(word);
         }
 
         // Add unit word if array item exists
-        if((word = units[ints[0]])) {
+        if ((word = units[ints[0]])) {
           words.push(word);
         }
 
         // Add tens word if array item exists
-        if((word = tens[ints[1]])) {
+        if ((word = tens[ints[1]])) {
           words.push(word);
         }
 
         // Add 'and' string after units or tens integer if:
-        if(ints[0] || ints[1]) {
+        if (ints[0] || ints[1]) {
 
           // Chunk has a hundreds integer or chunk is the first of multiple chunks
-          if((ints[2] || !i && chunksLen) && number.length >= 3) {
+          if ((ints[2] || !i && chunksLen) && number.length >= 3) {
             words.push(and);
           }
         }
 
         // Add hundreds word if array item exists
-        if((word = units[ints[2]])) {
+        if ((word = units[ints[2]])) {
           words.push(word + ' hundred');
         }
       }
@@ -101,10 +101,14 @@ export default Component.extend({
     return words.reverse().join(' ');
   },
 
-  word: computed('number', function() {
+  word: Ember.computed('number', function() {
+    if(typeof(this.number)=="undefined"){
+        return;
+      }
+    let number = this.number.replace(/,/g,'');
     let fullNumber, integerNumber, decimalNumber, integerNumberInWords, decimalNumberInWords, word;
-    if (this.decimal) {
-      fullNumber = this.number.toString().split('.');
+    if (this.decimal && typeof(number) !=="undefined") {
+      fullNumber = number.toString().split('.');
       integerNumber = fullNumber[0].toString();
       decimalNumber = fullNumber[1];
       integerNumberInWords = this.integerToWord(integerNumber);
@@ -113,7 +117,7 @@ export default Component.extend({
         decimalNumberInWords = this.integerToWord(decimalNumber);
       }
     } else {
-      integerNumberInWords = this.integerToWord(this.number.toString());
+      integerNumberInWords = this.integerToWord(number.toString());
     }
 
     switch (this.decimal) {
@@ -122,7 +126,11 @@ export default Component.extend({
         break;
       case 'fraction':
         if (decimalNumberInWords) {
-          word = `${integerNumberInWords} with <sup>${decimalNumber}</sup>&frasl;<sub>${`1${"0".repeat(decimalNumber.length)}`}</sub>`;
+          if(this.svg){
+            word = `${integerNumberInWords} with <tspan baseline-shift="super" font-size="${this.fractionSize}">${decimalNumber}</tspan>&frasl;<tspan baseline-shift="sub" y="205" font-size="${this.fractionSize}">${`1${"0".repeat(decimalNumber.length)}`}</tspan>`;
+          } else {
+            word = `${integerNumberInWords} with <sup>${decimalNumber}</sup>&frasl;<sub>${`1${"0".repeat(decimalNumber.length)}`}</sub>`;
+          }          
         } else {
           word = integerNumberInWords;
         }
@@ -130,9 +138,9 @@ export default Component.extend({
       default:
         word = integerNumberInWords;
     }
-    if(this.capitalize) {
+    if (this.capitalize) {
       word = word.charAt(0).toUpperCase() + word.slice(1);
     }
-    return htmlSafe(word);
+    return Ember.String.htmlSafe(word);
   })
 });
