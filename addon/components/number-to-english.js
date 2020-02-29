@@ -4,6 +4,7 @@ import { htmlSafe } from '@ember/string';
 import layout from '../templates/components/number-to-english';
 
 export default Component.extend({
+  tagName: 'tspan',
   layout,
 
   number: 0,
@@ -122,7 +123,11 @@ export default Component.extend({
         break;
       case 'fraction':
         if (decimalNumberInWords) {
-          word = `${integerNumberInWords} with <sup>${decimalNumber}</sup>&frasl;<sub>${`1${"0".repeat(decimalNumber.length)}`}</sub>`;
+          if(this.svg){
+            word = `${integerNumberInWords} with <tspan baseline-shift="super" font-size="${this.fractionSize}">${decimalNumber}</tspan>&frasl;<tspan baseline-shift="sub" y="205" font-size="${this.fractionSize}">${`1${"0".repeat(decimalNumber.length)}`}</tspan>`;
+          } else {
+            word = `${integerNumberInWords} with <sup>${decimalNumber}</sup>&frasl;<sub>${`1${"0".repeat(decimalNumber.length)}`}</sub>`;
+          }          
         } else {
           word = integerNumberInWords;
         }
